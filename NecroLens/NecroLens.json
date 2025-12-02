@@ -2,7 +2,7 @@
     "Author": "Jukka",
     "Name": "NecroLens",
     "Punchline": "真正的死灵术士一定对深层迷宫了如指掌...然而有的人却在使用科技！",
-    "Description": "深宫助手，显示怪物仇恨类型、引战范围和其他东西。亲友自用，不保证及时更新",
+    "Description": "深宫助手，显示怪物仇恨类型、引战范围和其他东西。\n\n调整了窗口和游戏内绘图，校正怪物信息，修复bug，优化代码\n自用，不保证及时更新",
     "Tags": [
         "potd",
         "hoh",
@@ -13,7 +13,7 @@
         "deep",
         "dungeon"
     ],
-    "Changelog": "窗口和游戏内绘图调整，怪物信息校正，修复bug，优化代码",
+    "Changelog": "移除窗口上本层魔法效果中的全景和咒印解除，使用杜松香敏慧后陷阱状态会更新为可见；支持显示银箱子的重复物品",
     "RepoUrl": "https://github.com/iVeigar/NecroLens",
     "IconUrl": "https://github.com/Jukkales/NecroLens/raw/main/icon.png"
 }
