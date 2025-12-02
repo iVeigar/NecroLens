@@ -13,12 +13,11 @@ namespace NecroLens.util;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class DeepDungeonUtil
 {
-    public static ushort MapId => ClientState.TerritoryType;
     public static bool InDeepDungeon => InPotD || InHoH || InEO || InPT;
-    public static bool InPotD => DataIds.PalaceOfTheDeadMapIds.Contains(MapId);
-    public static bool InHoH => DataIds.HeavenOnHighMapIds.Contains(MapId);
-    public static bool InEO => DataIds.EurekaOrthosMapIds.Contains(MapId);
-    public static bool InPT => DataIds.PilgrimsTraverseMapIds.Contains(MapId);
+    public static bool InPotD;
+    public static bool InHoH;
+    public static bool InEO;
+    public static bool InPT;
 
     public static bool IsPomanderUsable(Pomander pomander)
     {

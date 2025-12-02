@@ -1,11 +1,8 @@
 {
     "Author": "Jukka",
     "Name": "NecroLens",
-    "Punchline": "A true Necromancer always know the DeepDungeon ... everyone else just uses a high tech!",
-    "Description": "DeepDungeon Helper. Radar for Mobs, Aggro, Sight and everything else.",
-    "InternalName": "NecroLens",
-    "ApplicableVersion": "any",
-    "DalamudApiLevel": 13,
+    "Punchline": "真正的死灵术士一定对深层迷宫了如指掌...然而有的人却在使用科技！",
+    "Description": "深宫助手，显示怪物仇恨类型、引战范围和其他东西。亲友自用，不保证及时更新",
     "Tags": [
         "potd",
         "hoh",
@@ -16,6 +13,7 @@
         "deep",
         "dungeon"
     ],
-    "RepoUrl": "https://github.com/Jukkales/NecroLens",
+    "Changelog": "窗口和游戏内绘图调整，怪物信息校正，修复bug，优化代码",
+    "RepoUrl": "https://github.com/iVeigar/NecroLens",
     "IconUrl": "https://github.com/Jukkales/NecroLens/raw/main/icon.png"
 }

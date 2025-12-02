@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Threading;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
-using Dalamud.Bindings.ImGui;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using NecroLens.Model;
 using NecroLens.util;
 using static NecroLens.util.ESPUtils;
+using BattleNpcSubKind = Dalamud.Game.ClientState.Objects.Enums.BattleNpcSubKind;
 
 namespace NecroLens.Service;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
-public class ESPService : IDisposable
+public sealed class ESPService : IDisposable
 {
     private readonly Configuration conf;
 
@@ -25,7 +26,7 @@ public class ESPService : IDisposable
     {
         PluginLog.Debug("ESP Service loading...");
 
-        mapObjects = new List<ESPObject>();
+        mapObjects = [];
         conf = Config;
 
         PluginInterface.UiBuilder.Draw += OnUpdate;
@@ -66,7 +67,6 @@ public class ESPService : IDisposable
 
                 var drawList = ImGui.GetBackgroundDrawList();
                 foreach (var gameObject in mapObjects) DrawEspObject(drawList, gameObject);
-
                 Monitor.Exit(mapObjects);
             }
         }
@@ -76,7 +76,7 @@ public class ESPService : IDisposable
         }
     }
 
-    private bool DoDrawName(ESPObject espObject)
+    private unsafe bool DoDrawName(ESPObject espObject)
     {
         return espObject.Type switch
         {
@@ -84,10 +84,10 @@ public class ESPService : IDisposable
             ESPObject.ESPType.Enemy => !espObject.InCombat(),
             ESPObject.ESPType.Mimic => !espObject.InCombat(),
             ESPObject.ESPType.FriendlyEnemy => !espObject.InCombat(),
-            ESPObject.ESPType.BronzeChest => conf.ShowBronzeCoffers,
-            ESPObject.ESPType.SilverChest => conf.ShowSilverCoffers,
-            ESPObject.ESPType.GoldChest => conf.ShowGoldCoffers,
-            ESPObject.ESPType.AccursedHoard => conf.ShowHoards && !DungeonService.FloorDetails.HoardFound,
+            ESPObject.ESPType.BronzeChest => conf.ShowBronzeCoffers && ((Treasure*)espObject.GameObject.Address)->Flags == Treasure.TreasureFlags.None,
+            ESPObject.ESPType.SilverChest => conf.ShowSilverCoffers && espObject.GameObject.IsTargetable,
+            ESPObject.ESPType.GoldChest => conf.ShowGoldCoffers && espObject.GameObject.IsTargetable,
+            ESPObject.ESPType.AccursedHoard => conf.ShowHoards && !DungeonService.FloorDetails.AccursedHoardOpened,
             ESPObject.ESPType.MimicChest => conf.ShowMimicCoffer,
             ESPObject.ESPType.Trap => conf.ShowTraps,
             ESPObject.ESPType.Return => conf.ShowReturn,
@@ -100,58 +100,40 @@ public class ESPService : IDisposable
     /**
      * Draws every Object for the ESP-Overlay.
      */
-    private void DrawEspObject(ImDrawListPtr drawList, ESPObject espObject)
+    private unsafe void DrawEspObject(ImDrawListPtr drawList, ESPObject espObject)
     {
+        if (espObject.IsBossOrAdd()) return;
         var type = espObject.Type;
         var onScreen = GameGui.WorldToScreen(espObject.GameObject.Position, out var position2D);
+        if (onScreen && conf.ShowPlayerDot && type == ESPObject.ESPType.Player)
+            DrawPlayerDot(drawList, position2D);
+
+        if (!DoDrawName(espObject))
+            return;
+
+        var distance = espObject.Distance();
         if (onScreen)
         {
-            var distance = espObject.Distance();
-
-            if (conf.ShowPlayerDot && type == ESPObject.ESPType.Player)
-                DrawPlayerDot(drawList, position2D);
-
-            if (DoDrawName(espObject))
-                DrawName(drawList, espObject, position2D);
-
-            if (espObject.Type == ESPObject.ESPType.AccursedHoard && conf.ShowHoards && !DungeonService.FloorDetails.HoardFound)
+            DrawName(drawList, espObject, position2D);
+            if (type == ESPObject.ESPType.Trap)
+                DrawCircleFilled(drawList, espObject, 1.7f, espObject.RenderColor());
+            else if (type == ESPObject.ESPType.MimicChest)
+                DrawCircleFilled(drawList, espObject, 1f, espObject.RenderColor());
+            else if (type == ESPObject.ESPType.Passage)
+                DrawCircleFilled(drawList, espObject, 2f, espObject.RenderColor());
+            else if (espObject.IsChest() || type == ESPObject.ESPType.Votife || type == ESPObject.ESPType.FriendlyEnemy)
             {
-                var chestRadius = type == ESPObject.ESPType.AccursedHoard ? 2.0f : 1f; // Make Hoards bigger
-
-                if (distance <= 35 && conf.HighlightCoffers)
-                    DrawCircleFilled(drawList, espObject, chestRadius, espObject.RenderColor(), 1f);
-            }
-
-            if (espObject.IsChest())
-            {
-                if (!conf.ShowBronzeCoffers && type == ESPObject.ESPType.BronzeChest) return;
-                if (!conf.ShowSilverCoffers && type == ESPObject.ESPType.SilverChest) return;
-                if (!conf.ShowGoldCoffers && type == ESPObject.ESPType.GoldChest) return;
-                if (!conf.ShowHoards && type == ESPObject.ESPType.AccursedHoardCoffer) return;
-
-                if (distance <= 35 && conf.HighlightCoffers)
-                    DrawCircleFilled(drawList, espObject, 1f, espObject.RenderColor(), 1f);
-                if (distance <= 10 && conf.ShowCofferInteractionRange)
+                var radius = type == ESPObject.ESPType.AccursedHoard ? 2.0f : 1f; // Make Hoards bigger
+                if (distance <= 40 && conf.HighlightCoffers)
+                    DrawCircleFilled(drawList, espObject, radius, espObject.RenderColor(), 1f);
+                if (distance <= 20 && conf.ShowCofferInteractionRange)
                     DrawInteractionCircle(drawList, espObject, espObject.InteractionDistance());
             }
-
-            if (conf.ShowTraps && type == ESPObject.ESPType.Trap)
-                DrawCircleFilled(drawList, espObject, 1.7f, espObject.RenderColor());
-
-            if (conf.ShowMimicCoffer && type == ESPObject.ESPType.MimicChest)
-                DrawCircleFilled(drawList, espObject, 1f, espObject.RenderColor());
-
-            if (conf.HighlightPassage && type == ESPObject.ESPType.Passage)
-                DrawCircleFilled(drawList, espObject, 2f, espObject.RenderColor());
-
-            if (conf.ShowVotife && type == ESPObject.ESPType.Votife)
-                DrawCircleFilled(drawList, espObject, 2f, espObject.RenderColor());
         }
 
         if (Config.ShowMobViews &&
             (type == ESPObject.ESPType.Enemy || type == ESPObject.ESPType.Mimic) &&
-            BattleNpcSubKind.Enemy.Equals((BattleNpcSubKind)espObject.GameObject.SubKind) &&
-            !espObject.InCombat())
+            BattleNpcSubKind.Enemy.Equals((BattleNpcSubKind)espObject.GameObject.SubKind))
         {
             if (conf.ShowPatrolArrow && espObject.IsPatrol())
                 DrawFacingDirectionArrow(drawList, espObject, Color.Red.ToUint(), 0.6f);
@@ -176,7 +158,7 @@ public class ESPService : IDisposable
                         break;
                     default:
                         PluginLog.Error(
-                            $"Unable to process AggroType {espObject.AggroType().ToString()}");
+                            $"Unable to process AggroType {espObject.AggroType()}");
                         break;
                 }
             }

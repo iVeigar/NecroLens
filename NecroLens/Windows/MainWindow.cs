@@ -1,11 +1,8 @@
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Numerics;
-using Dalamud.Interface;
-using Dalamud.Interface.Components;
-using Dalamud.Interface.Windowing;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Windowing;
 using NecroLens.Data;
 using NecroLens.Model;
 using NecroLens.util;
@@ -16,14 +13,9 @@ public class MainWindow : Window, IDisposable
 {
     public MainWindow() : base("NecroLens",
                                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
-                               ImGuiWindowFlags.NoCollapse |
+                               ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize |
                                ImGuiWindowFlags.NoFocusOnAppearing)
     {
-        SizeConstraints = new WindowSizeConstraints
-        {
-            MinimumSize = new Vector2(370, 260),
-            MaximumSize = new Vector2(640, 280)
-        };
         RespectCloseHotkey = false;
     }
 
@@ -49,7 +41,7 @@ public class MainWindow : Window, IDisposable
 
     public override bool DrawConditions()
     {
-        return DeepDungeonUtil.InDeepDungeon && DungeonService.Ready;
+        return DeepDungeonUtil.InDeepDungeon;
     }
 
     private void DrawTrapStatus()
@@ -141,7 +133,7 @@ public class MainWindow : Window, IDisposable
 
     private void DrawCurrentFloorEffects()
     {
-        var effects = DungeonService.FloorDetails.GetFloorEffects();
+        var effects = DungeonService.FloorDetails.FloorEffects;
         var colorWhite = Color.White.ToV4();
         var colorGrey = Color.DimGray.ToV4();
         ImGui.BeginGroup();
@@ -183,11 +175,12 @@ public class MainWindow : Window, IDisposable
                                      FormatTime(DungeonService.FloorDetails.TimeTillRespawn())));
         }
 
-        ImGui.Spacing();
         DrawTrapStatus();
+        ImGui.SameLine();
         DrawPassageStatus();
 
         ImGui.EndGroup();
+        /*
         ImGui.SameLine();
         ImGui.BeginGroup();
 
@@ -227,7 +220,7 @@ public class MainWindow : Window, IDisposable
         }
 
         ImGui.EndGroup();
-
+        */
         ImGui.Separator();
         DrawTimeSet();
         ImGui.SameLine();

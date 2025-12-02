@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Interface;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using NecroLens.Data;
@@ -78,7 +77,7 @@ public class ESPObject
         else
         {
             var dataId = gameObject.BaseId;
-
+            var nameId = (gameObject is IBattleNpc npc) ? npc.NameId : 0;
             if (clientState.LocalPlayer != null && clientState.LocalPlayer.EntityId == gameObject.EntityId)
                 Type = ESPType.Player;
             else if (DataIds.BronzeChestIDs.Contains(dataId))
@@ -99,9 +98,9 @@ public class ESPObject
                 Type = ESPType.Return;
             else if (DataIds.TrapIDs.ContainsKey(dataId))
                 Type = ESPType.Trap;
-            else if (DataIds.FriendlyIDs.Contains(dataId))
+            else if (DataIds.FriendlyIDs.Contains(nameId))
                 Type = ESPType.FriendlyEnemy;
-            else if (DataIds.MimicIDs.Contains(dataId))
+            else if (DataIds.MimicIDs.Contains(dataId) || DataIds.MimicIDs.Contains(nameId))
                 Type = ESPType.Mimic;
             else if (DataIds.VotifesIds.Contains(dataId))
                 Type = ESPType.Votife;
@@ -115,7 +114,7 @@ public class ESPObject
     public ESPType Type { get; set; } = ESPType.Enemy;
 
     /**
-     * Default view of a Sight mob is 90° in front. We use the radian value of cos 90°.
+     * Default view of a Sight mob is 90掳 in front. We use the radian value of cos 90掳.
      */
     public float SightRadian { get; set; } = 1.571f;
 
@@ -162,10 +161,12 @@ public class ESPObject
     {
         return Type switch
         {
-            ESPType.BronzeChest => 3.1f,
-            ESPType.SilverChest => 4.4f,
-            ESPType.GoldChest => 4.4f,
-            ESPType.AccursedHoardCoffer => 4.4f,
+            ESPType.BronzeChest => 3.5f,
+            ESPType.SilverChest => 4.6f,
+            ESPType.GoldChest => 4.6f,
+            ESPType.AccursedHoardCoffer => 4.6f,
+            ESPType.Votife => 4.6f,
+            ESPType.FriendlyEnemy => 3.0f,
             _ => 2f
         };
     }
@@ -292,6 +293,26 @@ public class ESPObject
         {
             name += "\nD:" + GameObject.BaseId;
             if (GameObject is IBattleNpc npc2) name += " N:" + npc2.NameId;
+        }
+
+        if (Type == ESPType.Enemy &&
+            BattleNpcSubKind.Enemy.Equals((BattleNpcSubKind)GameObject.SubKind) &&
+            !InCombat())
+        {
+            var timer = DungeonService.FloorDetails.GetTimeElapsedFromMovement(GameObject);
+            if (timer >= 100)
+            {
+                name += $"\n{timer / 100 * 0.1f:0.0}s";
+            }
+            else if (timer < 0)
+            {
+                name += "\n--.--";
+            }
+        }
+
+        if (Type == ESPType.GoldChest && ContainingPomander != null)
+        {
+            name += "\n" + DungeonService.PomanderNames[ContainingPomander.Value];
         }
 
         return name;

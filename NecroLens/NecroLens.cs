@@ -1,4 +1,4 @@
-﻿#undef DEBUG
+#undef DEBUG
 
 
 using System.Diagnostics.CodeAnalysis;
@@ -7,6 +7,7 @@ using Dalamud.Game;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using ECommons;
+using NecroLens.Data;
 using NecroLens.Model;
 using NecroLens.Service;
 using NecroLens.Windows;
@@ -67,6 +68,7 @@ public sealed class NecroLens : IDalamudPlugin
                 ClientLanguage.French => CultureInfo.GetCultureInfo("fr"),
                 ClientLanguage.German => CultureInfo.GetCultureInfo("de"),
                 ClientLanguage.Japanese => CultureInfo.GetCultureInfo("ja"),
+                (ClientLanguage)4 => CultureInfo.GetCultureInfo("zh"),
                 _ => CultureInfo.GetCultureInfo("en")
             };
         }
@@ -74,6 +76,9 @@ public sealed class NecroLens : IDalamudPlugin
         {
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo(Config.Language);
         }
+        CultureInfo.CurrentUICulture = CultureInfo.DefaultThreadCurrentUICulture;
+        Strings.Culture = CultureInfo.DefaultThreadCurrentUICulture;
+        PluginLog.Debug($"Loaded language: {CultureInfo.DefaultThreadCurrentUICulture}, Client: {ClientState.ClientLanguage}");
     }
 
     public void Dispose()

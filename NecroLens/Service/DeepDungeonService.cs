@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Hooking;
+using Dalamud.Plugin.Services;
 using ECommons.Automation;
 using ECommons.Automation.NeoTaskManager;
+using ECommons.DalamudServices;
+using ECommons.EzHookManager;
+using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
@@ -22,69 +26,35 @@ namespace NecroLens.Service;
  */
 public class DeepDungeonService : IDisposable
 {
-    private readonly Configuration conf;
-    private readonly Timer floorTimer;
-    public readonly Dictionary<int, int> FloorTimes;
+    private readonly Configuration conf = Config;
+    public readonly Dictionary<int, int> FloorTimes = [];
     public int CurrentContentId;
     public DeepDungeonContentInfo.DeepDungeonFloorSetInfo? FloorSetInfo;
-    public bool Ready;
     private readonly TaskManager taskManager;
-    public readonly FloorDetails FloorDetails;
-    public readonly Dictionary<Pomander, string> PomanderNames;
-    
-    private const string ActorControlSig = "E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64";
-    private delegate void ActorControlSelfDelegate(uint category, uint eventId, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong targetId, byte param7);
-    private Hook<ActorControlSelfDelegate>? actorControlSelfHook;
-    
-    
-    private const string SystemLogSig = "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 0F B6 47 28";
-    private Hook<SystemLogMessageDelegate>? systemLogMessageHook;
+    public readonly FloorDetails FloorDetails = new();
+    public readonly Dictionary<Pomander, string> PomanderNames = [];
+#pragma warning disable CS0649
     private unsafe delegate void SystemLogMessageDelegate(uint entityId, uint logMessageId, int* args, byte argCount);
-
+    [EzHook("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 0F B6 47 28", nameof(SystemLogMessageDetour))]
+    private readonly EzHook<SystemLogMessageDelegate> systemLogMessageHook;
+#pragma warning restore CS0649
     public DeepDungeonService()
     {
-        // GameNetwork.NetworkMessage += NetworkMessage;
-        unsafe
-        {
-            var actorControlSelfPtr = SigScanner.ScanText(ActorControlSig);
-            actorControlSelfHook =
-                GameInteropProvider.HookFromAddress<ActorControlSelfDelegate>(actorControlSelfPtr, ActorControlSelf);
-            actorControlSelfHook.Enable();
-
-            var systemLogPtr = SigScanner.ScanText(SystemLogSig);
-            systemLogMessageHook =
-                GameInteropProvider.HookFromAddress<SystemLogMessageDelegate>(systemLogPtr, SystemLogMessage);
-            systemLogMessageHook.Enable();
-        }
-
-        FloorTimes = new Dictionary<int, int>();
-        floorTimer = new Timer();
-        floorTimer.Elapsed += OnTimerUpdate;
-        floorTimer.Interval = 1000;
-        Ready = false;
-        conf = Config;
-        FloorDetails = new FloorDetails();
+        EzSignatureHelper.Initialize(this);
         taskManager = new TaskManager(new TaskManagerConfiguration
         {
             TimeoutSilently = true
         });
-        PomanderNames = new Dictionary<Pomander, string>();
         
         foreach (var pomander in DataManager.GetExcelSheet<DeepDungeonItem>(ClientState.ClientLanguage).Skip(1))
         {
             PomanderNames[(Pomander)pomander.RowId] = pomander.Name.ToString();
         }
+        CheckEnteredNewFloor();
+        Svc.Condition.ConditionChange += OnConditionChanged;
     }
 
-    public void Dispose()
-    {
-        actorControlSelfHook?.Disable();
-        actorControlSelfHook?.Dispose();
-        systemLogMessageHook?.Disable();
-        systemLogMessageHook?.Dispose();
-    }
-
-    private void EnterDeepDungeon(int contentId, DeepDungeonContentInfo.DeepDungeonFloorSetInfo info)
+    private void EnterDeepDungeon(int contentId, DeepDungeonContentInfo.DeepDungeonFloorSetInfo info, int currentFloor)
     {
         FloorSetInfo = info;
         CurrentContentId = contentId;
@@ -97,59 +67,70 @@ public class DeepDungeonService : IDisposable
         for (var i = info.StartFloor; i < info.StartFloor + 10; i++)
             FloorTimes[i] = 0;
 
-        FloorDetails.CurrentFloor = info.StartFloor - 1; // NextFloor() adds 1
+        FloorDetails.CurrentFloor = currentFloor - 1; // NextFloor() adds 1
         FloorDetails.RespawnTime = info.RespawnTime;
         FloorDetails.FloorTransfer = true;
         FloorDetails.NextFloor();
 
         if (Config.AutoOpenOnEnter)
             Plugin.ShowMainWindow();
-
-        floorTimer.Start();
-        Ready = true;
+        Svc.Framework.Update += Update;
+    }
+    
+    private unsafe void CheckEnteredNewFloor()
+    {
+        var dd = EventFramework.Instance()->GetInstanceContentDeepDungeon();
+        if (dd == null || dd->Floor == 0 || !DeepDungeonContentInfo.ContentInfo.TryGetValue((int)dd->ContentId, out var info))
+            return;
+        if (!InDeepDungeon)
+        {
+            InPotD = dd->DeepDungeonId == 1;
+            InHoH = dd->DeepDungeonId == 2;
+            InEO = dd->DeepDungeonId == 3;
+            InPT = dd->DeepDungeonId == 4;
+            EnterDeepDungeon((int)dd->ContentId, info, dd->Floor);
+        }
+        else if (FloorDetails.FloorTransfer)
+        {
+            FloorDetails.NextFloor();
+        }
     }
 
     private void ExitDeepDungeon()
     {
         PluginLog.Debug($"ContentID {CurrentContentId} - Exiting");
-
+        Svc.Framework.Update -= Update;
         FloorDetails.DumpFloorObjects(CurrentContentId);
-
-        floorTimer.Stop();
         FloorSetInfo = null;
         FloorDetails.Clear();
-        Ready = false;
+        InPotD = InHoH = InEO = InPT = false;
         Plugin.CloseMainWindow();
     }
 
-    private void OnTimerUpdate(object? sender, ElapsedEventArgs e)
+    private void Update(IFramework _)
     {
-        if (!InDeepDungeon)
+        if (EzThrottler.Throttle("TimerUpdate", 500))
         {
-            PluginLog.Debug("Failsafe exit");
-            ExitDeepDungeon();
+            FloorTimes[FloorDetails.CurrentFloor] = FloorDetails.UpdateFloorTime();
+            FloorDetails.RemoveTimedOutMob();
         }
-
-        // If the plugin is loaded mid-dungeon then verify the floor
-        if (!FloorDetails.FloorVerified)
-            FloorDetails.VerifyFloorNumber();
-
-        var time = FloorDetails.UpdateFloorTime();
-        FloorTimes[FloorDetails.CurrentFloor] = time;
     }
 
-    private void ActorControlSelf(uint category, uint eventId, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong targetId, byte param7)
+    private void OnConditionChanged(ConditionFlag flag, bool value)
     {
-        actorControlSelfHook!.Original(category, eventId, param1, param2, param3, param4, param5, param6, targetId, param7);
-
-        if (eventId == 100 && !Ready && DeepDungeonContentInfo.ContentInfo.TryGetValue((int)param2, out var info))
-            EnterDeepDungeon((int)param2, info);
-
-        if (eventId == 200 && Ready && FloorDetails.FloorTransfer)
-            FloorDetails.NextFloor();
+        if (flag == ConditionFlag.Occupied33)
+        {
+            if (!value)
+                CheckEnteredNewFloor();
+        }
+        else if (flag == ConditionFlag.InDeepDungeon)
+        {
+            if (!value)
+                ExitDeepDungeon();
+        }
     }
 
-    private unsafe void SystemLogMessage(uint entityId, uint logId, int* args, byte argCount)
+    private unsafe void SystemLogMessageDetour(uint entityId, uint logId, int* args, byte argCount)
     {
         systemLogMessageHook!.Original(entityId, logId, args, argCount);
         
@@ -170,15 +151,15 @@ public class DeepDungeonService : IDisposable
                     
                     break;
                 case 0x1C66:
-                    if (Ready && FloorDetails.FloorTransfer)
+                    if (FloorDetails.FloorTransfer)
                     {
                         FloorDetails.NextFloor();
                     }
                     break;
-                case 0x1C6A:
+                //case 0x1C6A:
                 case 0x1C6B:
                 case 0x1C6C:
-                    FloorDetails.HoardFound = true;
+                    FloorDetails.AccursedHoardOpened = true;
                     break;
                 case 0x1C36:
                 case 0x23F8:
@@ -283,5 +264,11 @@ public class DeepDungeonService : IDisposable
     public void TrackFloorObjects(ESPObject espObj)
     {
         FloorDetails.TrackFloorObjects(espObj, CurrentContentId);
+    }
+
+    public void Dispose()
+    {
+        Svc.Framework.Update -= Update;
+        Svc.Condition.ConditionChange -= OnConditionChanged;
     }
 }

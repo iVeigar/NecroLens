@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Numerics;
-using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Objects.Types;
 using NecroLens.Model;
 
 namespace NecroLens.util;
@@ -33,16 +33,10 @@ public static class ESPUtils
     public static void DrawName(ImDrawListPtr drawList, ESPObject espObject, Vector2 position)
     {
         var name = espObject.Name();
-
-        if (espObject.Type == ESPObject.ESPType.GoldChest && espObject.ContainingPomander != null)
-        {
-            name += "\n" + DungeonService.PomanderNames[espObject.ContainingPomander.Value];
-        }
-
         var textSize = ImGui.CalcTextSize(name);
         // Center name on position
-        var textPosition = new Vector2(position.X - (textSize.X / 2f), position.Y + (textSize.Y / 2f));
-        drawList.AddText(textPosition, espObject.RenderColor(), name);
+        var textPosition = new Vector2(position.X - (textSize.X / 2f), position.Y);
+        drawList.DrawText(textPosition, name, espObject.RenderColor(), true, Color.Black.ToUint(), false);
     }
 
     public static void DrawPlayerDot(ImDrawListPtr drawList, Vector2 position)
@@ -180,5 +174,21 @@ public static class ESPUtils
         var stepPos = pos with { X = pos.X + xValue, Z = pos.Z + yValue };
         GameGui.WorldToScreen(stepPos, out var segment);
         return segment;
+    }
+
+    public static void DrawText(this ImDrawListPtr drawList, Vector2 pos, string text, uint color, bool stroke, uint strokecolor, bool centerAlignX = true)
+    {
+        if (centerAlignX)
+        {
+            pos -= new Vector2(ImGui.CalcTextSize(text).X, 0f) / 2f;
+        }
+        if (stroke)
+        {
+            drawList.AddText(pos + new Vector2(-1f, -1f), strokecolor, text);
+            drawList.AddText(pos + new Vector2(-1f, 1f), strokecolor, text);
+            drawList.AddText(pos + new Vector2(1f, -1f), strokecolor, text);
+            drawList.AddText(pos + new Vector2(1f, 1f), strokecolor, text);
+        }
+        drawList.AddText(pos, color, text);
     }
 }

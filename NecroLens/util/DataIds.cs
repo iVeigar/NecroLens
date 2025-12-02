@@ -63,7 +63,7 @@ public static class DataIds
 
     public static readonly HashSet<uint> MimicIDs = new()
     {
-        2566, 6362, 6363, 7392, 7393, 7394, 5832, 5834, 5835, 15997, 15998, 15999, 16002, 16003, 18889, 18890
+        2566, 5832, 5834, 5835, 6362, 6363, 6364, 6365, 6880, 7392, 7393, 7394, 9047, 15997, 15998, 15999, 16002, 16003, 18889, 18890
     };
 
     public static readonly HashSet<uint> BronzeChestIDs = new()
@@ -75,7 +75,7 @@ public static class DataIds
         // EO
         1541, 1542, 1543, 1544, 1545, 1546, 1547, 1548, 1549, 1550, 1551, 1552, 1553, 1554,
         // PT
-        1882, 1884, 1885, 1886, 1888, 1889, 1890, 1891, 1892, 1893, 1906, 1907, 1908, 
+        1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890, 1891, 1892, 1893, 1906, 1907, 1908,
     };
 
     public static readonly Dictionary<uint, string> TrapIDs = new()
@@ -108,14 +108,13 @@ public static class DataIds
 
     public static readonly HashSet<uint> FriendlyIDs = new()
     {
-        // PotD
-        5840, 5041, 7610,
-        // HoH
-        7396, 7397, 7398,
-        // EO
-        16007, 16008, 16009, 16012,
-        // PT
-        18898, 18899, 18900
+        5041, // 皮古迈欧
+        7396, // 狛犬
+        7397, // 犬神
+        7398, // 仙狸
+        7610, // 柯瑞甘
+        10309, // 正统柯瑞甘
+        14267, // 交错路柯瑞甘
     };
 
     // Pilgrimage's Traverse Candle Buffs

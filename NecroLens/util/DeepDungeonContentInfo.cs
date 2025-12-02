@@ -86,6 +86,13 @@ public class DeepDungeonContentInfo
             }
         },
         {
+            60010, new List<MobInfo>
+            {
+                // palace hippocerf (4979) 1+ Proximity, 91+ Sight
+                new() { Id = 4979, AggroType = ESPObject.ESPAggroType.Sight }
+            }
+        },
+        {
             60019, new List<MobInfo>
             {
                 // deep palace sprite (5480) 101+ Sound, 181+ Sight
@@ -98,7 +105,11 @@ public class DeepDungeonContentInfo
                 // Onyx Dragon (5420) 141+ Sight, 191+ Proximity
                 new() { Id = 5420, AggroType = ESPObject.ESPAggroType.Proximity },
                 // Hippogryph (5364) 100+ proximity, 191+ Sight
-                new() { Id = 5364, AggroType = ESPObject.ESPAggroType.Sight }
+                new() { Id = 5364, AggroType = ESPObject.ESPAggroType.Sight },
+                // Gourmand (5409) 131+ Patrol, 191+ Not
+                new() { Id = 5409, Patrol = false },
+                // Wraith (5422) 141+ Patrol, 191+ Not
+                new() { Id = 5422, Patrol = false },
             }
         }
     };

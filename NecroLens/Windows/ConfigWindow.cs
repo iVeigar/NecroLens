@@ -58,6 +58,7 @@ public class ConfigWindow() : Window(Strings.ConfigWindow_Title, ImGuiWindowFlag
                             ClientLanguage.French => CultureInfo.GetCultureInfo("fr"),
                             ClientLanguage.German => CultureInfo.GetCultureInfo("de"),
                             ClientLanguage.Japanese => CultureInfo.GetCultureInfo("ja"),
+                            (ClientLanguage)4 => CultureInfo.GetCultureInfo("zh"),
                             _ => CultureInfo.GetCultureInfo("en")
                         };
                     }
@@ -65,6 +66,9 @@ public class ConfigWindow() : Window(Strings.ConfigWindow_Title, ImGuiWindowFlag
                     {
                         CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo(conf.Language);
                     }
+
+                    CultureInfo.CurrentUICulture = CultureInfo.DefaultThreadCurrentUICulture;
+                    Strings.Culture = CultureInfo.DefaultThreadCurrentUICulture;
                 }
             }
             ImGui.EndCombo();
