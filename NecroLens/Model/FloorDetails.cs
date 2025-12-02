@@ -16,7 +16,7 @@ namespace NecroLens.Model;
 
 public partial class FloorDetails
 {
-    public Dictionary<uint, Pomander> DoubleChests { get; private set; } = [];
+    public Dictionary<uint, (DeepDungeonItemKind, int)> DoubleChests { get; private set; } = [];
     public List<Pomander> FloorEffects { get; private set; } = [];
     public Dictionary<uint, FloorObject> FloorObjects { get; private set; } = [];
     public List<uint> InteractionList { get; private set; } = [];
@@ -96,6 +96,16 @@ public partial class FloorDetails
         {
             FloorEffects.Add(pomander);
             usedPomanders.Add(pomander);
+        }
+    }
+
+    public void OnDemicloneUsed(Demiclone demiclone)
+    {
+        PluginLog.Debug($"Demiclone ID: {demiclone}");
+        if (demiclone == Demiclone.MazerootIncense)
+        {
+            FloorEffects.Add(Pomander.Sight);
+            usedPomanders.Add(Pomander.Sight);
         }
     }
 

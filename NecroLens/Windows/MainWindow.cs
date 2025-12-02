@@ -154,10 +154,6 @@ public class MainWindow : Window, IDisposable
         if (DungeonService.FloorDetails.IsNextFloorWith(Pomander.Alteration))
             DrawNextFloorMark();
 
-        ImGui.TextColored(effects.Contains(Pomander.Safety) ? colorWhite : colorGrey,
-                          Strings.MainWindow_CurrentFloorEffects_Safety);
-        ImGui.TextColored(effects.Contains(Pomander.Sight) ? colorWhite : colorGrey,
-                          Strings.MainWindow_CurrentFloorEffects_Sight);
         ImGui.TextColored(effects.Contains(Pomander.Fortune) ? colorWhite : colorGrey,
                           Strings.MainWindow_CurrentFloorEffects_Fortune);
         ImGui.EndGroup();
@@ -180,47 +176,7 @@ public class MainWindow : Window, IDisposable
         DrawPassageStatus();
 
         ImGui.EndGroup();
-        /*
-        ImGui.SameLine();
-        ImGui.BeginGroup();
 
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetColumnWidth() - 160);
-        var showAggro = Config.ShowMobViews;
-        if (ImGui.Checkbox(Strings.MainWindow_ShowAggro, ref showAggro))
-        {
-            Config.ShowMobViews = showAggro;
-            Config.Save();
-        }
-
-        ImGui.SameLine();
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetColumnWidth() - 20);
-        if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog)) Plugin.ShowConfigWindow();
-
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetColumnWidth() - 160);
-        var openChests = Config.OpenChests;
-        if (ImGui.Checkbox(Strings.MainWindow_OpenChests, ref openChests))
-        {
-            Config.OpenChests = openChests;
-            Config.Save();
-        }
-
-        ImGui.SameLine();
-        HelpMarker(Strings.MainWindow_OpenChests_Help);
-
-        ImGui.SameLine();
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetColumnWidth() - 20);
-        if (ImGuiComponents.IconButton(FontAwesomeIcon.Toolbox)) DungeonService.TryNearestOpenChest();
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-            ImGui.TextUnformatted(Strings.MainWindow_OpenChestButton_Help);
-            ImGui.PopTextWrapPos();
-            ImGui.EndTooltip();
-        }
-
-        ImGui.EndGroup();
-        */
         ImGui.Separator();
         DrawTimeSet();
         ImGui.SameLine();

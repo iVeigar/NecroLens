@@ -5,17 +5,6 @@ namespace NecroLens.util;
 
 public static class DataIds
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Network IDs
-    public const uint SystemLogPomanderUsed = 0x1C56;
-    public const uint SystemLogDutyEnded = 0x5FE;
-    public const uint SystemLogTransferenceInitiated = 0x1C50;
-    public const uint ActorControlSelfDirectorUpdate = 0x6D;
-    public const int DirectorUpdateDutyCommenced = 0x1;
-    public const int DirectorUpdateDutyRecommenced = 0x6;
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataIds of Objects
     public const uint SilverChest = 2007357;
     public const uint GoldChest = 2007358;
     public const uint MimicChest = 2006020;

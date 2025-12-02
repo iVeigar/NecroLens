@@ -53,7 +53,7 @@ public class ESPObject
     public ESPObject(IGameObject gameObject, MobInfo? mobInfo = null)
     {
         this.clientState = ClientState;
-        ContainingPomander = null;
+        ContainingItem = null;
         GameObject = gameObject;
         this.mobInfo = mobInfo;
 
@@ -107,7 +107,7 @@ public class ESPObject
         }
     }
     
-    public Pomander? ContainingPomander { get; set; }
+    public (DeepDungeonItemKind, int)? ContainingItem { get; set; }
 
     public IGameObject GameObject { get; }
 
@@ -310,9 +310,9 @@ public class ESPObject
             }
         }
 
-        if (Type == ESPType.GoldChest && ContainingPomander != null)
+        if ((Type == ESPType.GoldChest || Type == ESPType.SilverChest) && ContainingItem != null)
         {
-            name += "\n" + DungeonService.PomanderNames[ContainingPomander.Value];
+            name += "\n" + DungeonService.ItemNames[ContainingItem.Value];
         }
 
         return name;

@@ -121,7 +121,7 @@ public sealed class ESPService : IDisposable
                 DrawCircleFilled(drawList, espObject, 1f, espObject.RenderColor());
             else if (type == ESPObject.ESPType.Passage)
                 DrawCircleFilled(drawList, espObject, 2f, espObject.RenderColor());
-            else if (espObject.IsChest() || type == ESPObject.ESPType.Votife || type == ESPObject.ESPType.FriendlyEnemy)
+            else if (espObject.IsChest() || type == ESPObject.ESPType.AccursedHoard || type == ESPObject.ESPType.Votife || type == ESPObject.ESPType.FriendlyEnemy)
             {
                 var radius = type == ESPObject.ESPType.AccursedHoard ? 2.0f : 1f; // Make Hoards bigger
                 if (distance <= 40 && conf.HighlightCoffers)
@@ -199,10 +199,10 @@ public sealed class ESPService : IDisposable
 
                         var espObj = new ESPObject(obj, mobInfo);
                         
-                        if (obj.BaseId == DataIds.GoldChest 
+                        if ((obj.BaseId == DataIds.GoldChest || obj.BaseId == DataIds.SilverChest)
                             && DungeonService.FloorDetails.DoubleChests.TryGetValue(obj.EntityId, out var value))
                         {
-                            espObj.ContainingPomander = value;
+                            espObj.ContainingItem = value;
                         }
 
                         DungeonService.TryInteract(espObj);
@@ -213,6 +213,7 @@ public sealed class ESPService : IDisposable
 
                     if (ClientState.LocalPlayer != null &&
                         ClientState.LocalPlayer.EntityId == obj.EntityId)
+
                         entityList.Add(new ESPObject(obj));
                 }
 

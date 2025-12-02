@@ -8,6 +8,7 @@ using ECommons.Automation;
 using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices;
 using ECommons.EzHookManager;
+using ECommons.GameHelpers;
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
@@ -32,7 +33,7 @@ public class DeepDungeonService : IDisposable
     public DeepDungeonContentInfo.DeepDungeonFloorSetInfo? FloorSetInfo;
     private readonly TaskManager taskManager;
     public readonly FloorDetails FloorDetails = new();
-    public readonly Dictionary<Pomander, string> PomanderNames = [];
+    public readonly Dictionary<(DeepDungeonItemKind, int), string> ItemNames = [];
 #pragma warning disable CS0649
     private unsafe delegate void SystemLogMessageDelegate(uint entityId, uint logMessageId, int* args, byte argCount);
     [EzHook("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 0F B6 47 28", nameof(SystemLogMessageDetour))]
@@ -48,7 +49,15 @@ public class DeepDungeonService : IDisposable
         
         foreach (var pomander in DataManager.GetExcelSheet<DeepDungeonItem>(ClientState.ClientLanguage).Skip(1))
         {
-            PomanderNames[(Pomander)pomander.RowId] = pomander.Name.ToString();
+            ItemNames[(DeepDungeonItemKind.Pomander, (int)pomander.RowId)] = pomander.Name.ToString();
+        }
+        foreach (var magicstone in DataManager.GetExcelSheet<DeepDungeonMagicStone>(ClientState.ClientLanguage).Skip(1))
+        {
+            ItemNames[(DeepDungeonItemKind.MagicStone, (int)magicstone.RowId)] = magicstone.Name.ToString();
+        }
+        foreach (var demiclone in DataManager.GetExcelSheet<DeepDungeonDemiclone>(ClientState.ClientLanguage).Skip(1))
+        {
+            ItemNames[(DeepDungeonItemKind.Demiclone, (int)demiclone.RowId)] = demiclone.TitleCase.ToString();
         }
         CheckEnteredNewFloor();
         Svc.Condition.ConditionChange += OnConditionChanged;
@@ -138,45 +147,41 @@ public class DeepDungeonService : IDisposable
         {
             switch (logId)
             {
-                case DataIds.SystemLogPomanderUsed:
-                    FloorDetails.OnPomanderUsed((Pomander)args[1]);
-                    break;
-                case DataIds.SystemLogDutyEnded:
-                    ExitDeepDungeon();
-                    break;
-                case DataIds.SystemLogTransferenceInitiated:
+                case 7248:
                     FloorDetails.FloorTransfer = true;
                     FloorDetails.DumpFloorObjects(CurrentContentId);
                     FloorDetails.FloorObjects.Clear();
-                    
                     break;
-                case 0x1C66:
-                    if (FloorDetails.FloorTransfer)
-                    {
-                        FloorDetails.NextFloor();
-                    }
+                case 7254:
+                    FloorDetails.OnPomanderUsed((Pomander)args[1]);
                     break;
-                //case 0x1C6A:
-                case 0x1C6B:
-                case 0x1C6C:
+                case 11251:
+                    FloorDetails.OnDemicloneUsed((Demiclone)args[1]);
+                    break;
+                case 7275:
+                case 7276:
                     FloorDetails.AccursedHoardOpened = true;
                     break;
-                case 0x1C36:
-                case 0x23F8:
-                    // case 0x282F: // Demiclone
-                    var pomander = (Pomander)args[0];
-                    if (pomander > 0)
+                case 7222: // DeepDungeonItem (Pomander and Protomander)
+                    var chestPomander = ObjectTable.Where(o => o.BaseId == DataIds.GoldChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
+                    if (chestPomander != null)
                     {
-                        var player = ClientState.LocalPlayer!;
-                        var chest = ObjectTable
-                                    .Where(o => o.BaseId == DataIds.GoldChest)
-                                    .FirstOrDefault(o => o.Position.Distance2D(player.Position) <= 4.6f);
-                        if (chest != null)
-                        {
-                            FloorDetails.DoubleChests[chest.EntityId] = pomander;
-                        }
+                        FloorDetails.DoubleChests[chestPomander.EntityId] = (DeepDungeonItemKind.Pomander, args[0]);
                     }
-
+                    break;
+                case 9208: // DeepDungeonMagicStone
+                    var chestMagicStone = ObjectTable.Where(o => o.BaseId == DataIds.SilverChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
+                    if (chestMagicStone != null)
+                    {
+                        FloorDetails.DoubleChests[chestMagicStone.EntityId] = (DeepDungeonItemKind.MagicStone, args[0]);
+                    }
+                    break;
+                case 10287: // DeepDungeonDemiclone
+                    var chestDemiclone = ObjectTable.Where(o => o.BaseId == DataIds.SilverChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
+                    if (chestDemiclone != null)
+                    {
+                        FloorDetails.DoubleChests[chestDemiclone.EntityId] = (DeepDungeonItemKind.Demiclone, args[0]);
+                    }
                     break;
             }
         }
