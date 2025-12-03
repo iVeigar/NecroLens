@@ -2,7 +2,7 @@
 <Project Sdk="Dalamud.CN.NET.Sdk/13.1.0">
     <PropertyGroup>
         <Authors>Jukka</Authors>
-        <Version>7.38.0.1</Version>
+        <Version>7.38.0.2</Version>
         <Nullable>annotations</Nullable>
         <LangVersion>preview</LangVersion>
         <OutputPath>bin\$(Configuration)\</OutputPath>

@@ -7,6 +7,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Objects.Types;
+using ECommons.Throttlers;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using NecroLens.util;
 using Newtonsoft.Json;
@@ -39,7 +41,7 @@ public partial class FloorDetails
         DoubleChests.Clear();
         CurrentFloor = 0;
         FloorTransfer = false;
-        mobMovement.Clear();
+        mobIdleStatusTracker.Clear();
     }
 
     public void NextFloor()
@@ -228,65 +230,80 @@ public partial class FloorDetails
     }
 
     // 怪物静止计时器
-    #region MobTimer
-    public class MovementInfo(Vector3 Position, long Time, long Elasped)
+    #region Mob Idle Status Tracker
+
+    public class MobIdleStatus(Vector3 position, long time)
     {
-        public Vector3 Position = Position;
-        public long LastSeen = Time;
-        public long Elasped = Elasped;
+        public Vector3 LastSeenPosition = position; // 上次看到的位置
+        public long LastSeenTime = time; // 上次看到的时刻
+        public long Elasped = -1; // 静止状态已经持续的时间，负数表示未知，0表示移动中
     }
 
-    private const long ThresholdMs = 5000; // 怪物变换到新位置所用时间一般小于5s
-    private readonly Dictionary<uint, MovementInfo> mobMovement = [];
-    public long GetTimeElapsedFromMovement(IGameObject obj)
+    private readonly Dictionary<uint, MobIdleStatus> mobIdleStatusTracker = [];
+    // 怪物的移动时间一般小于5秒，脱离视野的时间超过这个值后，再次进入视野时若为静止状态且位置变化，无法得知静止了多久
+    private const long IdleRevalidationThreshold = 5000; 
+    public unsafe void TickIdleStatus(IGameObject obj)
     {
+        if (!obj.IsValid() || obj is not IBattleChara) return;
         var now = Environment.TickCount64;
         var position = obj.Position;
-        if (mobMovement.TryGetValue(obj.EntityId, out var info))
+        // 怪物模型timelineId，0为刚进入视野时的值, 3为静止 13为走路
+        var timelineId = ((BattleChara*)obj.Address)->Timeline.TimelineSequencer.TimelineIds[0];
+        
+        // 注: 怪物被其他怪物挤到而被动移动时，position会变，timelineId会从3变为13，rotation也有概率会变，因此无法简单地区分出主动的随机游走和受碰撞产生的被动移动
+        if (mobIdleStatusTracker.TryGetValue(obj.EntityId, out var status))
         {
-            if (Vector3.Distance(position, info.Position) <= 0.001)
+            if (Vector3.Distance(position, status.LastSeenPosition) < 0.01f)
             {
-                // 没动，更新计时（若为未知则仍保持未知）
-                if (info.Elasped >= 0)
-                    info.Elasped += now - info.LastSeen;
-            }
-            else if (now - info.LastSeen < ThresholdMs)
-            {
-                // 一直在视野里/脱离视野的时间没超过阈值，位置发生改变，重置计时
-                info.Position = position;
-                info.Elasped = 0;
+                if (status.Elasped >= 0)
+                    status.Elasped += now - status.LastSeenTime;
             }
             else
             {
-                // 脱离视野的时间超过阈值，视作第一次看到它，不知道它已经保持静止了多久，计时用负数表示未知
-                info.Position = position;
-                info.Elasped = -1;
+                if (now - status.LastSeenTime < IdleRevalidationThreshold) // 脱离视野的时间未超过阈值，或者一直在视野内
+                {
+                    if (timelineId == 0) // 刚进入视野，延迟到下一帧再判定
+                        return;
+
+                    if (timelineId == 3) // 期间有移动过，但当前为静止，静止时长取值区间为 (0 ~ now-status.LastSeenTime)，保守起见取最大值
+                        status.Elasped = now - status.LastSeenTime;
+                    else // 非静止状态
+                        status.Elasped = 0;
+                }
+                else // 超时，设为未知。如果它正在移动那么下一帧就会变为0
+                    status.Elasped = -1;
+                status.LastSeenPosition = position;
             }
-            info.LastSeen = now;
+            status.LastSeenTime = now;
         }
         else
         {
-            // 第一次看到它，不知道它已经保持静止了多久，计时用负数表示未知
-            info = new(position, now, -1);
-            mobMovement.Add(obj.EntityId, info);
+            // 第一次看到
+            mobIdleStatusTracker.Add(obj.EntityId, new(position, now));
         }
-        return info.Elasped;
     }
 
-    public void RemoveTimedOutMob()
+    public long GetIdleTimeElapsed(IGameObject obj)
     {
+        return mobIdleStatusTracker.GetOrDefault(obj.EntityId)?.Elasped ?? -1;
+    }
+
+    public void PruneIdleStatusTracker()
+    {
+        if (!EzThrottler.Throttle("PruneIdleStatusTracker", 1000))
+            return;
         var now = Environment.TickCount64;
         var toRemove = new List<uint>();
-        foreach (var mobMovement in mobMovement)
+        foreach (var (entityId, status) in mobIdleStatusTracker)
         {
-            if (now - mobMovement.Value.LastSeen > 300000) // 5分钟
+            if (now - status.LastSeenTime > 300000) // 5 minutes no see
             {
-                toRemove.Add(mobMovement.Key);
+                toRemove.Add(entityId);
             }
         }
-        foreach (var key in toRemove)
+        foreach (var entityId in toRemove)
         {
-            mobMovement.Remove(key);
+            mobIdleStatusTracker.Remove(entityId);
         }
     }
     #endregion

@@ -183,39 +183,25 @@ public class ESPObject
 
     public uint RenderColor()
     {
-        switch (Type)
+        return Type switch
         {
-            case ESPType.Enemy:
-                return DangerLevel() switch
-                {
-                    ESPDangerLevel.Danger => Color.Red.ToUint(),
-                    ESPDangerLevel.Caution => Color.OrangeRed.ToUint(),
-                    _ => Color.White.ToUint()
-                };
-            case ESPType.FriendlyEnemy:
-                return Color.LightGreen.ToUint();
-            case ESPType.Mimic:
-            case ESPType.MimicChest:
-            case ESPType.Trap:
-                return Color.Red.ToUint();
-            case ESPType.Return:
-                return Color.LightBlue.ToUint();
-            case ESPType.Passage:
-                return Config.PassageColor;
-            case ESPType.AccursedHoard:
-            case ESPType.AccursedHoardCoffer:
-                return Config.HoardColor;
-            case ESPType.GoldChest:
-                return Config.GoldCofferColor;
-            case ESPType.SilverChest:
-                return Config.SilverCofferColor;
-            case ESPType.BronzeChest:
-                return Config.BronzeCofferColor;
-            case ESPType.Votife:
-                return Config.VotifeColor;
-            default:
-                return Color.White.ToUint();
-        }
+            ESPType.Enemy => DangerLevel() switch
+            {
+                ESPDangerLevel.Danger => Color.Red.ToUint(),
+                ESPDangerLevel.Caution => Color.OrangeRed.ToUint(),
+                _ => Color.White.ToUint()
+            },
+            ESPType.FriendlyEnemy => Color.LightGreen.ToUint(),
+            ESPType.Mimic or ESPType.MimicChest or ESPType.Trap => Color.Red.ToUint(),
+            ESPType.Return => Color.LightBlue.ToUint(),
+            ESPType.Passage => Config.PassageColor,
+            ESPType.AccursedHoard or ESPType.AccursedHoardCoffer => Config.HoardColor,
+            ESPType.GoldChest => Config.GoldCofferColor,
+            ESPType.SilverChest => Config.SilverCofferColor,
+            ESPType.BronzeChest => Config.BronzeCofferColor,
+            ESPType.Votife => Config.VotifeColor,
+            _ => Color.White.ToUint(),
+        };
     }
 
     public bool InCombat()
@@ -299,7 +285,7 @@ public class ESPObject
             BattleNpcSubKind.Enemy.Equals((BattleNpcSubKind)GameObject.SubKind) &&
             !InCombat())
         {
-            var timer = DungeonService.FloorDetails.GetTimeElapsedFromMovement(GameObject);
+            var timer = DungeonService.FloorDetails.GetIdleTimeElapsed(GameObject);
             if (timer >= 100)
             {
                 name += $"\n{timer / 100 * 0.1f:0.0}s";

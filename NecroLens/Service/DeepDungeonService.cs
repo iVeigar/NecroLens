@@ -121,7 +121,6 @@ public class DeepDungeonService : IDisposable
         if (EzThrottler.Throttle("TimerUpdate", 500))
         {
             FloorTimes[FloorDetails.CurrentFloor] = FloorDetails.UpdateFloorTime();
-            FloorDetails.RemoveTimedOutMob();
         }
     }
 

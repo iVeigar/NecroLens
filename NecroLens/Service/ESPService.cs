@@ -209,6 +209,7 @@ public sealed class ESPService : IDisposable
 
                         entityList.Add(espObj);
                         DungeonService.TrackFloorObjects(espObj);
+                        DungeonService.FloorDetails.TickIdleStatus(obj);
                     }
 
                     if (ClientState.LocalPlayer != null &&
@@ -221,6 +222,7 @@ public sealed class ESPService : IDisposable
                 mapObjects.Clear();
                 mapObjects.AddRange(entityList);
                 Monitor.Exit(mapObjects);
+                DungeonService.FloorDetails.PruneIdleStatusTracker();
             }
         }
         catch (Exception e)
