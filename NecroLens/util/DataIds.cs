@@ -44,7 +44,7 @@ public static class DataIds
         2001168, // Twistaaa
 
         // Random friendly stuff
-        15898, 15899, 15860,
+        15898, 15899,
         18867, 18868, 18869, 
         10489, 16926, 7245,
         13961, 10487
