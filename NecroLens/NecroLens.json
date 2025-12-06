@@ -13,7 +13,7 @@
         "deep",
         "dungeon"
     ],
-    "Changelog": "移除窗口上本层魔法效果中的全景和咒印解除，使用杜松香敏慧后陷阱状态会更新为可见；支持显示银箱子的重复物品",
+    "Changelog": "移除窗口上本层魔法效果中的全景和咒印解除，使用杜松香敏慧后陷阱状态会更新为可见；支持显示银箱子的重复物品；细分柯瑞甘和天宫友好npc",
     "RepoUrl": "https://github.com/iVeigar/NecroLens",
     "IconUrl": "https://github.com/Jukkales/NecroLens/raw/main/icon.png"
 }
