@@ -34,7 +34,8 @@ public class ESPObject
         Player,
         Enemy,
         Mimic,
-        FriendlyEnemy,
+        Kerrigan,
+        HelpfulNpc,
         BronzeChest,
         SilverChest,
         GoldChest,
@@ -98,8 +99,10 @@ public class ESPObject
                 Type = ESPType.Return;
             else if (DataIds.TrapIDs.ContainsKey(dataId))
                 Type = ESPType.Trap;
-            else if (DataIds.FriendlyIDs.Contains(nameId))
-                Type = ESPType.FriendlyEnemy;
+            else if (DataIds.HelpfulNpcIDs.Contains(nameId))
+                Type = ESPType.HelpfulNpc;
+            else if (DataIds.KerriganIDs.Contains(nameId))
+                Type = ESPType.Kerrigan;
             else if (DataIds.MimicIDs.Contains(dataId) || DataIds.MimicIDs.Contains(nameId))
                 Type = ESPType.Mimic;
             else if (DataIds.VotifesIds.Contains(dataId))
@@ -166,7 +169,7 @@ public class ESPObject
             ESPType.GoldChest => 4.6f,
             ESPType.AccursedHoardCoffer => 4.6f,
             ESPType.Votife => 4.6f,
-            ESPType.FriendlyEnemy => 3.0f,
+            ESPType.HelpfulNpc => 3.0f,
             _ => 2f
         };
     }
@@ -191,7 +194,7 @@ public class ESPObject
                 ESPDangerLevel.Caution => Color.OrangeRed.ToUint(),
                 _ => Color.White.ToUint()
             },
-            ESPType.FriendlyEnemy => Color.LightGreen.ToUint(),
+            ESPType.Kerrigan or ESPType.HelpfulNpc => Color.LightGreen.ToUint(),
             ESPType.Mimic or ESPType.MimicChest or ESPType.Trap => Color.Red.ToUint(),
             ESPType.Return => Color.LightBlue.ToUint(),
             ESPType.Passage => Config.PassageColor,
@@ -235,7 +238,7 @@ public class ESPObject
             ESPType.GoldChest => "\uE03D",
             ESPType.Return => "\uE03B",
             ESPType.Passage => "\uE035",
-            ESPType.FriendlyEnemy => "\uE034",
+            ESPType.Kerrigan or ESPType.HelpfulNpc => "\uE034",
             ESPType.Votife => "\uE03B",
             _ => null
         };

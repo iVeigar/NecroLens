@@ -95,12 +95,16 @@ public static class DataIds
         2014755
     };
 
-    public static readonly HashSet<uint> FriendlyIDs = new()
+    public static readonly HashSet<uint> HelpfulNpcIDs = new()
     {
-        5041, // 皮古迈欧
         7396, // 狛犬
         7397, // 犬神
         7398, // 仙狸
+    };
+
+    public static readonly HashSet<uint> KerriganIDs = new()
+    {
+        5041, // 皮古迈欧
         7610, // 柯瑞甘
         10309, // 正统柯瑞甘
         14267, // 交错路柯瑞甘

@@ -83,7 +83,7 @@ public sealed class ESPService : IDisposable
             ESPObject.ESPType.Player => false,
             ESPObject.ESPType.Enemy => !espObject.InCombat(),
             ESPObject.ESPType.Mimic => !espObject.InCombat(),
-            ESPObject.ESPType.FriendlyEnemy => !espObject.InCombat(),
+            ESPObject.ESPType.Kerrigan or ESPObject.ESPType.HelpfulNpc => !espObject.InCombat(),
             ESPObject.ESPType.BronzeChest => conf.ShowBronzeCoffers && ((Treasure*)espObject.GameObject.Address)->Flags == Treasure.TreasureFlags.None,
             ESPObject.ESPType.SilverChest => conf.ShowSilverCoffers && espObject.GameObject.IsTargetable,
             ESPObject.ESPType.GoldChest => conf.ShowGoldCoffers && espObject.GameObject.IsTargetable,
@@ -121,7 +121,7 @@ public sealed class ESPService : IDisposable
                 DrawCircleFilled(drawList, espObject, 1f, espObject.RenderColor());
             else if (type == ESPObject.ESPType.Passage)
                 DrawCircleFilled(drawList, espObject, 2f, espObject.RenderColor());
-            else if (espObject.IsChest() || type == ESPObject.ESPType.AccursedHoard || type == ESPObject.ESPType.Votife || type == ESPObject.ESPType.FriendlyEnemy)
+            else if (espObject.IsChest() || type == ESPObject.ESPType.AccursedHoard || type == ESPObject.ESPType.Votife || type == ESPObject.ESPType.HelpfulNpc)
             {
                 var radius = type == ESPObject.ESPType.AccursedHoard ? 2.0f : 1f; // Make Hoards bigger
                 if (distance <= 40 && conf.HighlightCoffers)
