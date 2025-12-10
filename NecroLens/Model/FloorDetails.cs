@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Objects.Types;
+using ECommons.DalamudServices;
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
@@ -48,7 +49,7 @@ public partial class FloorDetails
     {
         if (FloorTransfer)
         {
-            PluginLog.Debug($"NextFloor: {CurrentFloor + 1}");
+            Svc.Log.Debug($"NextFloor: {CurrentFloor + 1}");
 
             // Reset
             InteractionList.Clear();
@@ -83,7 +84,7 @@ public partial class FloorDetails
 
     public void OnPomanderUsed(Pomander pomander)
     {
-        PluginLog.Debug($"Pomander ID: {pomander}");
+        Svc.Log.Debug($"Pomander ID: {pomander}");
 
         if (InEO)
         {
@@ -103,7 +104,7 @@ public partial class FloorDetails
 
     public void OnDemicloneUsed(Demiclone demiclone)
     {
-        PluginLog.Debug($"Demiclone ID: {demiclone}");
+        Svc.Log.Debug($"Demiclone ID: {demiclone}");
         if (demiclone == Demiclone.MazerootIncense)
         {
             FloorEffects.Add(Pomander.Sight);
@@ -196,7 +197,7 @@ public partial class FloorDetails
             var collector = new DataCollector
             {
                 Sender = Config.UniqueId!,
-                Party = PartyList.PartyId.ToString(),
+                Party = Svc.Party.PartyId.ToString(),
                 Data = new Collection<DataCollector.MobData>(result.Values.ToList())
             };
 
@@ -206,7 +207,7 @@ public partial class FloorDetails
                                                    {
                                                        NullValueHandling = NullValueHandling.Ignore
                                                    });
-            PluginLog.Debug("Sending Data: \n" + json);
+            Svc.Log.Debug("Sending Data: \n" + json);
 
             Task.Factory.StartNew(async () =>
             {
@@ -218,7 +219,7 @@ public partial class FloorDetails
                 }
                 catch (Exception e)
                 {
-                    PluginLog.Debug(e, "Failed to send data to server");
+                    Svc.Log.Debug(e, "Failed to send data to server");
                 }
             });
         }

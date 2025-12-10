@@ -7,6 +7,7 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
+using ECommons.DalamudServices;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using NecroLens.Model;
 using NecroLens.util;
@@ -24,23 +25,23 @@ public sealed class ESPService : IDisposable
 
     public ESPService()
     {
-        PluginLog.Debug("ESP Service loading...");
+        Svc.Log.Debug("ESP Service loading...");
 
         mapObjects = [];
         conf = Config;
 
-        PluginInterface.UiBuilder.Draw += OnUpdate;
-        ClientState.TerritoryChanged += OnCleanup;
-        Framework.Update += OnTick;
+        Svc.PluginInterface.UiBuilder.Draw += OnUpdate;
+        Svc.ClientState.TerritoryChanged += OnCleanup;
+        Svc.Framework.Update += OnTick;
     }
 
     public void Dispose()
     {
-        PluginInterface.UiBuilder.Draw -= OnUpdate;
-        ClientState.TerritoryChanged -= OnCleanup;
-        Framework.Update -= OnTick;
+        Svc.PluginInterface.UiBuilder.Draw -= OnUpdate;
+        Svc.ClientState.TerritoryChanged -= OnCleanup;
+        Svc.Framework.Update -= OnTick;
         mapObjects.Clear();
-        PluginLog.Information("ESP Service unloaded");
+        Svc.Log.Info("ESP Service unloaded");
     }
 
 
@@ -72,7 +73,7 @@ public sealed class ESPService : IDisposable
         }
         catch (Exception e)
         {
-            PluginLog.Error(e.ToString());
+            Svc.Log.Error(e.ToString());
         }
     }
 
@@ -104,7 +105,7 @@ public sealed class ESPService : IDisposable
     {
         if (espObject.IsBossOrAdd()) return;
         var type = espObject.Type;
-        var onScreen = GameGui.WorldToScreen(espObject.GameObject.Position, out var position2D);
+        var onScreen = Svc.GameGui.WorldToScreen(espObject.GameObject.Position, out var position2D);
         if (onScreen && conf.ShowPlayerDot && type == ESPObject.ESPType.Player)
             DrawPlayerDot(drawList, position2D);
 
@@ -155,9 +156,11 @@ public sealed class ESPService : IDisposable
                     case ESPObject.ESPAggroType.Sight:
                         DrawConeFromCenterPoint(drawList, espObject, espObject.SightRadian,
                                                 espObject.AggroDistance(), conf.NormalAggroColor);
+                        DrawCircleFilled(drawList, espObject, 1.1f,
+                             conf.NormalAggroColor, DefaultFilledOpacity);
                         break;
                     default:
-                        PluginLog.Error(
+                        Svc.Log.Error(
                             $"Unable to process AggroType {espObject.AggroType()}");
                         break;
                 }
@@ -171,10 +174,10 @@ public sealed class ESPService : IDisposable
     private bool ShouldDraw()
     {
         return Config.EnableESP &&
-               !(Condition[ConditionFlag.LoggingOut] ||
-                 Condition[ConditionFlag.BetweenAreas] ||
-                 Condition[ConditionFlag.BetweenAreas51]) &&
-               ClientState is { LocalPlayer: not null, LocalContentId: > 0 }
+               !(Svc.Condition[ConditionFlag.LoggingOut] ||
+                 Svc.Condition[ConditionFlag.BetweenAreas] ||
+                 Svc.Condition[ConditionFlag.BetweenAreas51]) &&
+               Svc.ClientState is { LocalPlayer: not null, LocalContentId: > 0 }
                 && DeepDungeonUtil.InDeepDungeon;
     }
 
@@ -188,7 +191,7 @@ public sealed class ESPService : IDisposable
             if (ShouldDraw())
             {
                 var entityList = new List<ESPObject>();
-                foreach (var obj in ObjectTable)
+                foreach (var obj in Svc.Objects)
                 {
                     // Ignore every player object
                     if (obj.IsValid() && !IsIgnoredObject(obj))
@@ -212,8 +215,8 @@ public sealed class ESPService : IDisposable
                         DungeonService.FloorDetails.TickIdleStatus(obj);
                     }
 
-                    if (ClientState.LocalPlayer != null &&
-                        ClientState.LocalPlayer.EntityId == obj.EntityId)
+                    if (Svc.ClientState.LocalPlayer != null &&
+                        Svc.ClientState.LocalPlayer.EntityId == obj.EntityId)
 
                         entityList.Add(new ESPObject(obj));
                 }
@@ -227,7 +230,7 @@ public sealed class ESPService : IDisposable
         }
         catch (Exception e)
         {
-            PluginLog.Error(e.ToString());
+            Svc.Log.Error(e.ToString());
         }
 
     }

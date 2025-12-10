@@ -47,15 +47,15 @@ public class DeepDungeonService : IDisposable
             TimeoutSilently = true
         });
         
-        foreach (var pomander in DataManager.GetExcelSheet<DeepDungeonItem>(ClientState.ClientLanguage).Skip(1))
+        foreach (var pomander in Svc.Data.GetExcelSheet<DeepDungeonItem>(Svc.ClientState.ClientLanguage).Skip(1))
         {
             ItemNames[(DeepDungeonItemKind.Pomander, (int)pomander.RowId)] = pomander.Name.ToString();
         }
-        foreach (var magicstone in DataManager.GetExcelSheet<DeepDungeonMagicStone>(ClientState.ClientLanguage).Skip(1))
+        foreach (var magicstone in Svc.Data.GetExcelSheet<DeepDungeonMagicStone>(Svc.ClientState.ClientLanguage).Skip(1))
         {
             ItemNames[(DeepDungeonItemKind.MagicStone, (int)magicstone.RowId)] = magicstone.Name.ToString();
         }
-        foreach (var demiclone in DataManager.GetExcelSheet<DeepDungeonDemiclone>(ClientState.ClientLanguage).Skip(1))
+        foreach (var demiclone in Svc.Data.GetExcelSheet<DeepDungeonDemiclone>(Svc.ClientState.ClientLanguage).Skip(1))
         {
             ItemNames[(DeepDungeonItemKind.Demiclone, (int)demiclone.RowId)] = demiclone.TitleCase.ToString();
         }
@@ -67,7 +67,7 @@ public class DeepDungeonService : IDisposable
     {
         FloorSetInfo = info;
         CurrentContentId = contentId;
-        PluginLog.Debug($"Entering ContentID {CurrentContentId}");
+        Svc.Log.Debug($"Entering ContentID {CurrentContentId}");
 
         FloorTimes.Clear();
 
@@ -107,7 +107,7 @@ public class DeepDungeonService : IDisposable
 
     private void ExitDeepDungeon()
     {
-        PluginLog.Debug($"ContentID {CurrentContentId} - Exiting");
+        Svc.Log.Debug($"ContentID {CurrentContentId} - Exiting");
         Svc.Framework.Update -= Update;
         FloorDetails.DumpFloorObjects(CurrentContentId);
         FloorSetInfo = null;
@@ -162,21 +162,21 @@ public class DeepDungeonService : IDisposable
                     FloorDetails.AccursedHoardOpened = true;
                     break;
                 case 7222: // DeepDungeonItem (Pomander and Protomander)
-                    var chestPomander = ObjectTable.Where(o => o.BaseId == DataIds.GoldChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
+                    var chestPomander = Svc.Objects.Where(o => o.BaseId == DataIds.GoldChest).FirstOrDefault(o =>  o.Position.Distance2D(Player.Position) <= 4.6f);
                     if (chestPomander != null)
                     {
                         FloorDetails.DoubleChests[chestPomander.EntityId] = (DeepDungeonItemKind.Pomander, args[0]);
                     }
                     break;
                 case 9208: // DeepDungeonMagicStone
-                    var chestMagicStone = ObjectTable.Where(o => o.BaseId == DataIds.SilverChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
+                    var chestMagicStone = Svc.Objects.Where(o => o.BaseId == DataIds.SilverChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
                     if (chestMagicStone != null)
                     {
                         FloorDetails.DoubleChests[chestMagicStone.EntityId] = (DeepDungeonItemKind.MagicStone, args[0]);
                     }
                     break;
                 case 10287: // DeepDungeonDemiclone
-                    var chestDemiclone = ObjectTable.Where(o => o.BaseId == DataIds.SilverChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
+                    var chestDemiclone = Svc.Objects.Where(o => o.BaseId == DataIds.SilverChest).FirstOrDefault(o => o.Position.Distance2D(Player.Position) <= 4.6f);
                     if (chestDemiclone != null)
                     {
                         FloorDetails.DoubleChests[chestDemiclone.EntityId] = (DeepDungeonItemKind.Demiclone, args[0]);
@@ -203,7 +203,7 @@ public class DeepDungeonService : IDisposable
 
     internal unsafe void TryInteract(ESPObject espObj)
     {
-        var player = ClientState.LocalPlayer!;
+        var player = Svc.ClientState.LocalPlayer!;
         if ((player.StatusFlags & StatusFlags.InCombat) == 0 && conf.OpenChests && espObj.IsChest())
         {
             var type = espObj.Type;
@@ -228,7 +228,7 @@ public class DeepDungeonService : IDisposable
     public unsafe void TryNearestOpenChest()
     {
         // Checks every object to be a chest and try to open the  
-        foreach (var obj in ObjectTable)
+        foreach (var obj in Svc.Objects)
             if (obj.IsValid())
             {
                 var dataId = obj.BaseId;

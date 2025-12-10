@@ -80,7 +80,7 @@ public static class DeepDungeonUtil
             return false;
         }
 
-        var sheet = DataManager.GetExcelSheet<Lumina.Excel.Sheets.DeepDungeonItem>()!;
+        var sheet = Svc.Data.GetExcelSheet<Lumina.Excel.Sheets.DeepDungeonItem>()!;
         var matches = sheet.Where(e => e.RowId is > 0 and < 23 or > 36)
                            .Where(e => e.Singular.ToString().Contains(name, StringComparison.OrdinalIgnoreCase))
                            .ToList();

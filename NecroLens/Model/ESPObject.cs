@@ -4,7 +4,8 @@ using System.Drawing;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Plugin.Services;
+using ECommons.DalamudServices;
+using ECommons.GameHelpers;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using NecroLens.Data;
 using NecroLens.util;
@@ -48,12 +49,10 @@ public class ESPObject
         Votife,
     }
 
-    private IClientState clientState;
-    private MobInfo? mobInfo;
+    private readonly MobInfo? mobInfo;
 
     public ESPObject(IGameObject gameObject, MobInfo? mobInfo = null)
     {
-        this.clientState = ClientState;
         ContainingItem = null;
         GameObject = gameObject;
         this.mobInfo = mobInfo;
@@ -79,7 +78,7 @@ public class ESPObject
         {
             var dataId = gameObject.BaseId;
             var nameId = (gameObject is IBattleNpc npc) ? npc.NameId : 0;
-            if (clientState.LocalPlayer != null && clientState.LocalPlayer.EntityId == gameObject.EntityId)
+            if (Svc.ClientState.LocalPlayer != null && Svc.ClientState.LocalPlayer.EntityId == gameObject.EntityId)
                 Type = ESPType.Player;
             else if (DataIds.BronzeChestIDs.Contains(dataId))
                 Type = ESPType.BronzeChest;
@@ -176,7 +175,7 @@ public class ESPObject
 
     public float Distance()
     {
-        return clientState.LocalPlayer != null ? GameObject.Position.Distance2D(clientState.LocalPlayer.Position) : 0;
+        return Player.Available ? GameObject.Position.Distance2D(Player.Position) : 0;
     }
 
     public bool IsChest()

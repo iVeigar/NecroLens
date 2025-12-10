@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using Dalamud.Interface.Windowing;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game;
+using Dalamud.Interface.Windowing;
+using ECommons.DalamudServices;
 using NecroLens.Data;
 using NecroLens.Model;
 using NecroLens.util;
@@ -53,7 +54,7 @@ public class ConfigWindow() : Window(Strings.ConfigWindow_Title, ImGuiWindowFlag
                     Config.Save();
                     if (language.Key == "")
                     {
-                        CultureInfo.DefaultThreadCurrentUICulture = ClientState.ClientLanguage switch
+                        CultureInfo.DefaultThreadCurrentUICulture = Svc.ClientState.ClientLanguage switch
                         {
                             ClientLanguage.French => CultureInfo.GetCultureInfo("fr"),
                             ClientLanguage.German => CultureInfo.GetCultureInfo("de"),

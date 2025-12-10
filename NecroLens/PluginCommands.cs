@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using Dalamud.Game.Command;
+using ECommons.DalamudServices;
 using NecroLens.Data;
 
 namespace NecroLens;
@@ -8,28 +9,28 @@ public class PluginCommands : IDisposable
 {
     public PluginCommands()
     {
-        CommandManager.AddHandler("/necrolens",
+        Svc.Commands.AddHandler("/necrolens",
             new CommandInfo((_, _) => Plugin.ShowMainWindow())
             {
                 HelpMessage = Strings.PluginCommands_OpenOverlay_Help,
                 ShowInHelp = true
             });
 
-        CommandManager.AddHandler("/necrolenscfg",
+        Svc.Commands.AddHandler("/necrolenscfg",
             new CommandInfo((_, _) => Plugin.ShowConfigWindow())
             {
                 HelpMessage = Strings.PluginCommands_OpenConfig_Help,
                 ShowInHelp = true
             });
-        
-        CommandManager.AddHandler("/openchest",
+
+        Svc.Commands.AddHandler("/openchest",
             new CommandInfo((_, _) => DungeonService.TryNearestOpenChest())
             {
                 HelpMessage = Strings.PluginCommands_OpenChest_Help,
                 ShowInHelp = true
             });
-        
-        CommandManager.AddHandler("/pomander",
+
+        Svc.Commands.AddHandler("/pomander",
             new CommandInfo((_, args) => DungeonService.OnPomanderCommand(args))
             {
                 HelpMessage = "Try to use the pomander with given name",
@@ -39,9 +40,9 @@ public class PluginCommands : IDisposable
 
     public void Dispose()
     {
-        CommandManager.RemoveHandler("/necrolens");
-        CommandManager.RemoveHandler("/necrolenscfg");
-        CommandManager.RemoveHandler("/openchest");
-        CommandManager.RemoveHandler("/pomander");
+        Svc.Commands.RemoveHandler("/necrolens");
+        Svc.Commands.RemoveHandler("/necrolenscfg");
+        Svc.Commands.RemoveHandler("/openchest");
+        Svc.Commands.RemoveHandler("/pomander");
     }
 }

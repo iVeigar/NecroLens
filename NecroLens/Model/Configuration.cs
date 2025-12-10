@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Configuration;
+using ECommons.DalamudServices;
 
 namespace NecroLens.Model;
 
@@ -60,6 +61,6 @@ public class Configuration : IPluginConfiguration
 
     public void Save()
     {
-        PluginInterface.SavePluginConfig(this);
+        Svc.PluginInterface.SavePluginConfig(this);
     }
 }

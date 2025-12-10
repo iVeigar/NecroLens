@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Types;
+using ECommons.DalamudServices;
 using NecroLens.Model;
 
 namespace NecroLens.util;
@@ -59,7 +60,7 @@ public static class ESPUtils
         var partialCircleSegmentRotation = angleRadian / CircleSegments;
         var coneColor = outlineColor.SetAlpha(0.2f);
 
-        GameGui.WorldToScreen(new Vector3(position.X, position.Y, position.Z),
+        Svc.GameGui.WorldToScreen(new Vector3(position.X, position.Y, position.Z),
                                             out var originPositionOnScreen);
         drawList.PathLineTo(originPositionOnScreen);
         for (var i = 0; i <= CircleSegments; i++)
@@ -67,7 +68,7 @@ public static class ESPUtils
             var currentRotation = rotation - (i * partialCircleSegmentRotation);
             var xValue = radius * MathF.Sin(currentRotation);
             var yValue = radius * MathF.Cos(currentRotation);
-            GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
+            Svc.GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
                                                 out var segmentVectorOnCircle);
             drawList.PathLineTo(segmentVectorOnCircle);
         }
@@ -80,7 +81,7 @@ public static class ESPUtils
             var currentRotation = rotation - (i * partialCircleSegmentRotation);
             var xValue = radius * MathF.Sin(currentRotation);
             var yValue = radius * MathF.Cos(currentRotation);
-            GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
+            Svc.GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
                                                 out var segmentVectorOnCircle);
             drawList.PathLineTo(segmentVectorOnCircle);
         }
@@ -119,7 +120,7 @@ public static class ESPUtils
             var currentRotation = i * circleSegmentFullRotation;
             var xValue = radius * MathF.Sin(currentRotation);
             var yValue = radius * MathF.Cos(currentRotation);
-            GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
+            Svc.GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
                                                 out var segment);
             // drawList.PathLineTo(segment);
             drawList.PathArcTo(segment, 1f, 1f, 1f);
@@ -152,7 +153,7 @@ public static class ESPUtils
             var currentRotation = i * CircleSegmentFullRotation;
             var xValue = radius * MathF.Sin(currentRotation);
             var yValue = radius * MathF.Cos(currentRotation);
-            GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
+            Svc.GameGui.WorldToScreen(new Vector3(position.X + xValue, position.Y, position.Z + yValue),
                                                 out var segment);
             drawList.PathLineTo(segment);
         }
@@ -172,7 +173,7 @@ public static class ESPUtils
         var xValue = radian * MathF.Sin(stepRotation);
         var yValue = radian * MathF.Cos(stepRotation);
         var stepPos = pos with { X = pos.X + xValue, Z = pos.Z + yValue };
-        GameGui.WorldToScreen(stepPos, out var segment);
+        Svc.GameGui.WorldToScreen(stepPos, out var segment);
         return segment;
     }
 

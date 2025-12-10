@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Conditions;
+using ECommons.DalamudServices;
 using NecroLens.Model;
 using NecroLens.util;
 
@@ -16,12 +17,12 @@ public class ESPTestService : IDisposable
 {
     public ESPTestService()
     {
-        PluginInterface.UiBuilder.Draw += OnUpdate;
+        Svc.PluginInterface.UiBuilder.Draw += OnUpdate;
     }
 
     public void Dispose()
     {
-        PluginInterface.UiBuilder.Draw -= OnUpdate;
+        Svc.PluginInterface.UiBuilder.Draw -= OnUpdate;
     }
 
     private void OnUpdate()
@@ -29,10 +30,10 @@ public class ESPTestService : IDisposable
         if (ShouldDraw())
         {
             var drawList = ImGui.GetBackgroundDrawList();
-            var player = ClientState.LocalPlayer;
+            var player = Svc.ClientState.LocalPlayer;
             var espObject = new ESPObject(player!);
 
-            var onScreen = GameGui.WorldToScreen(player!.Position, out _);
+            var onScreen = Svc.GameGui.WorldToScreen(player!.Position, out _);
             if (onScreen)
             {
                 //drawList.AddCircleFilled(position2D, 3f, ColorUtils.ToUint(Color.Red, 0.8f), 100);
@@ -48,10 +49,10 @@ public class ESPTestService : IDisposable
 
     private bool ShouldDraw()
     {
-        return !(Condition[ConditionFlag.LoggingOut] ||
-                 Condition[ConditionFlag.BetweenAreas] ||
-                 Condition[ConditionFlag.BetweenAreas51]) &&
-               ClientState.LocalPlayer != null &&
-               ClientState.LocalContentId > 0 && ObjectTable.Length > 0;
+        return !(Svc.Condition[ConditionFlag.LoggingOut] ||
+                 Svc.Condition[ConditionFlag.BetweenAreas] ||
+                 Svc.Condition[ConditionFlag.BetweenAreas51]) &&
+               Svc.ClientState.LocalPlayer != null &&
+               Svc.ClientState.LocalContentId > 0 && Svc.Objects.Length > 0;
     }
 }

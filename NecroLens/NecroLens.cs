@@ -7,6 +7,7 @@ using Dalamud.Game;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using ECommons;
+using ECommons.DalamudServices;
 using NecroLens.Data;
 using NecroLens.Model;
 using NecroLens.Service;
@@ -34,12 +35,11 @@ public sealed class NecroLens : IDalamudPlugin
 
     public NecroLens(IDalamudPluginInterface? pluginInterface)
     {
-        pluginInterface?.Create<PluginService>();
         Plugin = this;
 
         ECommonsMain.Init(pluginInterface, this, Module.DalamudReflector);
 
-        Config = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Config = Svc.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         pluginCommands = new PluginCommands();
         configWindow = new ConfigWindow();
@@ -58,12 +58,12 @@ public sealed class NecroLens : IDalamudPlugin
 #if DEBUG
         espTestService = new ESPTestService();
 #endif
-        PluginInterface.UiBuilder.Draw += DrawUI;
-        PluginInterface.UiBuilder.OpenConfigUi += ShowConfigWindow;
+        Svc.PluginInterface.UiBuilder.Draw += DrawUI;
+        Svc.PluginInterface.UiBuilder.OpenConfigUi += ShowConfigWindow;
 
         if (Config.Language == "")
         {
-            CultureInfo.DefaultThreadCurrentUICulture = ClientState.ClientLanguage switch
+            CultureInfo.DefaultThreadCurrentUICulture = Svc.ClientState.ClientLanguage switch
             {
                 ClientLanguage.French => CultureInfo.GetCultureInfo("fr"),
                 ClientLanguage.German => CultureInfo.GetCultureInfo("de"),
@@ -78,15 +78,14 @@ public sealed class NecroLens : IDalamudPlugin
         }
         CultureInfo.CurrentUICulture = CultureInfo.DefaultThreadCurrentUICulture;
         Strings.Culture = CultureInfo.DefaultThreadCurrentUICulture;
-        PluginLog.Debug($"Loaded language: {CultureInfo.DefaultThreadCurrentUICulture}, Client: {ClientState.ClientLanguage}");
+        Svc.Log.Debug($"Loaded language: {CultureInfo.DefaultThreadCurrentUICulture}, Client: {Svc.ClientState.ClientLanguage}");
     }
 
     public void Dispose()
     {
         WindowSystem.RemoveAllWindows();
-
-        PluginInterface.UiBuilder.Draw -= DrawUI;
-        PluginInterface.UiBuilder.OpenConfigUi -= ShowConfigWindow;
+        Svc.PluginInterface.UiBuilder.Draw -= DrawUI;
+        Svc.PluginInterface.UiBuilder.OpenConfigUi -= ShowConfigWindow;
 
         configWindow.Dispose();
         pluginCommands.Dispose();
@@ -97,7 +96,6 @@ public sealed class NecroLens : IDalamudPlugin
         espTestService.Dispose();
 #endif
         mobInfoService.Dispose();
-        
         ECommonsMain.Dispose();
     }
 
