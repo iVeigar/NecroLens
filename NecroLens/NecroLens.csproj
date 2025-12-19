@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.CN.NET.Sdk/14.0.0">
     <PropertyGroup>
         <Nullable>annotations</Nullable>
-        <LangVersion>preview</LangVersion>
         <OutputPath>bin\$(Configuration)\</OutputPath>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <GenerateDependencyFile>false</GenerateDependencyFile>
     	<PackageVersion_Dalamud_NET_Sdk>14.0.1</PackageVersion_Dalamud_NET_Sdk>
 		<PackageVersion_DalamudPackager>14.0.1</PackageVersion_DalamudPackager>
     </PropertyGroup>
@@ -33,11 +31,6 @@
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
         <DefineConstants>TRACE</DefineConstants>
     </PropertyGroup>
-    <ItemGroup>
-        <Content Include="NecroLens.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="ECommons" Version="3.1.0.1" />
     </ItemGroup>
