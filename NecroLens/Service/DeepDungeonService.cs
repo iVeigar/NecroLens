@@ -9,6 +9,7 @@ using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices;
 using ECommons.EzHookManager;
 using ECommons.GameHelpers;
+using ECommons.MathHelpers;
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
@@ -93,10 +94,10 @@ public class DeepDungeonService : IDisposable
             return;
         if (!InDeepDungeon)
         {
-            InPotD = dd->DeepDungeonId == 1;
-            InHoH = dd->DeepDungeonId == 2;
-            InEO = dd->DeepDungeonId == 3;
-            InPT = dd->DeepDungeonId == 4;
+            InPotD = dd->ContentId.InRange(60001, 60020, true);
+            InHoH = dd->ContentId.InRange(60021, 60030, true);
+            InEO = dd->ContentId.InRange(60031, 60040, true);
+            InPT = dd->ContentId.InRange(60041, 60050, true);
             EnterDeepDungeon((int)dd->ContentId, info, dd->Floor);
         }
         else if (FloorDetails.FloorTransfer)
@@ -203,7 +204,7 @@ public class DeepDungeonService : IDisposable
 
     internal unsafe void TryInteract(ESPObject espObj)
     {
-        var player = Svc.ClientState.LocalPlayer!;
+        var player = Svc.Objects.LocalPlayer!;
         if ((player.StatusFlags & StatusFlags.InCombat) == 0 && conf.OpenChests && espObj.IsChest())
         {
             var type = espObj.Type;

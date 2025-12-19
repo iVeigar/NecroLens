@@ -30,7 +30,7 @@ public class ESPTestService : IDisposable
         if (ShouldDraw())
         {
             var drawList = ImGui.GetBackgroundDrawList();
-            var player = Svc.ClientState.LocalPlayer;
+            var player = Svc.Objects.LocalPlayer;
             var espObject = new ESPObject(player!);
 
             var onScreen = Svc.GameGui.WorldToScreen(player!.Position, out _);
@@ -52,7 +52,7 @@ public class ESPTestService : IDisposable
         return !(Svc.Condition[ConditionFlag.LoggingOut] ||
                  Svc.Condition[ConditionFlag.BetweenAreas] ||
                  Svc.Condition[ConditionFlag.BetweenAreas51]) &&
-               Svc.ClientState.LocalPlayer != null &&
-               Svc.ClientState.LocalContentId > 0 && Svc.Objects.Length > 0;
+               Svc.Objects.LocalPlayer != null &&
+               Svc.PlayerState.ContentId > 0 && Svc.Objects.Length > 0;
     }
 }

@@ -176,8 +176,7 @@ public sealed class ESPService : IDisposable
         return Config.EnableESP &&
                !(Svc.Condition[ConditionFlag.LoggingOut] ||
                  Svc.Condition[ConditionFlag.BetweenAreas] ||
-                 Svc.Condition[ConditionFlag.BetweenAreas51]) &&
-               Svc.ClientState is { LocalPlayer: not null, LocalContentId: > 0 }
+                 Svc.Condition[ConditionFlag.BetweenAreas51])
                 && DeepDungeonUtil.InDeepDungeon;
     }
 
@@ -215,8 +214,7 @@ public sealed class ESPService : IDisposable
                         DungeonService.FloorDetails.TickIdleStatus(obj);
                     }
 
-                    if (Svc.ClientState.LocalPlayer != null &&
-                        Svc.ClientState.LocalPlayer.EntityId == obj.EntityId)
+                    if (Svc.PlayerState.EntityId == obj.EntityId)
 
                         entityList.Add(new ESPObject(obj));
                 }

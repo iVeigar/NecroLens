@@ -78,7 +78,7 @@ public class ESPObject
         {
             var dataId = gameObject.BaseId;
             var nameId = (gameObject is IBattleNpc npc) ? npc.NameId : 0;
-            if (Svc.ClientState.LocalPlayer != null && Svc.ClientState.LocalPlayer.EntityId == gameObject.EntityId)
+            if (Svc.Objects.LocalPlayer != null && Svc.Objects.LocalPlayer.EntityId == gameObject.EntityId)
                 Type = ESPType.Player;
             else if (DataIds.BronzeChestIDs.Contains(dataId))
                 Type = ESPType.BronzeChest;
